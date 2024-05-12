@@ -29,7 +29,8 @@ func main() {
 	app := initApp()
 	defer app.snippets.DB.Close()
 
-	app.logger.Info("starting server", slog.String("addr", app.config.addr))
+	app.logger.Info("starting server",
+		slog.String("addr", app.config.addr))
 
 	err := http.ListenAndServe(app.config.addr, app.routes())
 	app.logger.Error(err.Error())
