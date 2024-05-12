@@ -10,7 +10,6 @@ import (
 	"github.com/johanesalxd/snippetbox/internal/models"
 )
 
-// TODO: implement correct GET functionality
 func (app application) home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server", "Go")
 
@@ -21,27 +20,27 @@ func (app application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, snippet := range snippets {
-		fmt.Fprintf(w, "%+v\n", snippet)
+	files := []string{
+		"./ui/html/base.tmpl",
+		"./ui/html/pages/home.tmpl",
+		"./ui/html/partials/nav.tmpl",
 	}
 
-	// files := []string{
-	// 	"./ui/html/base.tmpl",
-	// 	"./ui/html/pages/home.tmpl",
-	// 	"./ui/html/partials/nav.tmpl",
-	// }
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, r, err)
 
-	// ts, err := template.ParseFiles(files...)
-	// if err != nil {
-	// 	app.serverError(w, r, err)
+		return
+	}
 
-	// 	return
-	// }
+	data := templateData{
+		Snippets: snippets,
+	}
 
-	// err = ts.ExecuteTemplate(w, "base", nil)
-	// if err != nil {
-	// 	app.serverError(w, r, err)
-	// }
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, r, err)
+	}
 }
 
 func (app application) snippetView(w http.ResponseWriter, r *http.Request) {
