@@ -24,6 +24,17 @@ type application struct {
 }
 
 func main() {
+	app := initApp()
+	defer app.snippets.DB.Close()
+
+	app.logger.Info("starting server", slog.String("addr", app.config.addr))
+
+	err := http.ListenAndServe(app.config.addr, app.routes())
+	app.logger.Error(err.Error())
+	os.Exit(1)
+}
+
+func initApp() application {
 	var cfg config
 
 	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP network address")
@@ -38,19 +49,12 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer db.Close()
 
-	app := application{
+	return application{
 		config:   cfg,
 		logger:   logger,
 		snippets: &models.SnippetModel{DB: db},
 	}
-
-	logger.Info("starting server", slog.String("addr", cfg.addr))
-
-	err = http.ListenAndServe(cfg.addr, app.routes())
-	logger.Error(err.Error())
-	os.Exit(1)
 }
 
 func openDB(dsn string) (*sql.DB, error) {
