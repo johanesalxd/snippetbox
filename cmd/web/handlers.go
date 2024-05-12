@@ -49,7 +49,9 @@ func (app application) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Display a form for creating a new snippet...")
+	data := app.newTemplateData()
+
+	app.render(w, r, http.StatusOK, "create.tmpl", data)
 }
 
 // TODO: implement correct POST functionality
