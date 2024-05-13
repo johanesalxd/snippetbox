@@ -11,6 +11,8 @@ To be added.
 ## Code snippets
 
 ```
+docker volume create test-mysql-data
+
 docker run \
    --name test-mysql \
    -v test-mysql-data:/var/lib/mysql \

@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/schema"
 	"github.com/johanesalxd/snippetbox/internal/models"
 )
 
@@ -23,6 +24,7 @@ type application struct {
 	logger        *slog.Logger
 	snippets      *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *schema.Decoder
 }
 
 func main() {
@@ -59,11 +61,14 @@ func initApp() application {
 		os.Exit(1)
 	}
 
+	formDecoder := schema.NewDecoder()
+
 	return application{
 		config:        cfg,
 		logger:        logger,
 		snippets:      &models.SnippetModel{DB: db},
 		templateCache: templateCache,
+		formDecoder:   formDecoder,
 	}
 }
 

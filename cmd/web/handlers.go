@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -11,9 +12,10 @@ import (
 )
 
 type snippetCreateForm struct {
-	Title, Content string
-	Expires        int
-	validator.Validator
+	Title               string `schema:"title, required"`
+	Content             string `schema:"content, required"`
+	Expires             int    `schema:"expires, required"`
+	validator.Validator `schema:"-"`
 }
 
 func (app application) home(w http.ResponseWriter, r *http.Request) {
@@ -65,22 +67,11 @@ func (app application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	var form snippetCreateForm
+
+	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
-	}
-
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-
-		return
-	}
-
-	form := snippetCreateForm{
-		Title:   r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: expires,
 	}
 
 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
@@ -91,6 +82,9 @@ func (app application) snippetCreatePost(w http.ResponseWriter, r *http.Request)
 	if !form.Valid() {
 		data := app.newTemplateData()
 		data.Form = form
+
+		app.logger.Error("invalid forms",
+			slog.String("errors", fmt.Sprintf("%+v", form)))
 
 		app.render(w, r, http.StatusUnprocessableEntity, "create.tmpl", data)
 
