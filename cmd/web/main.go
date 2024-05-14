@@ -104,10 +104,14 @@ func (app application) initServer() http.Server {
 	}
 
 	srv := http.Server{
-		Addr:      app.config.addr,
-		Handler:   app.routes(),
-		ErrorLog:  slog.NewLogLogger(app.logger.Handler(), slog.LevelError),
-		TLSConfig: tlsConfig,
+		Addr:           app.config.addr,
+		Handler:        app.routes(),
+		ErrorLog:       slog.NewLogLogger(app.logger.Handler(), slog.LevelError),
+		TLSConfig:      tlsConfig,
+		IdleTimeout:    time.Minute,
+		ReadTimeout:    5 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 524288,
 	}
 
 	app.logger.Info("starting server",
