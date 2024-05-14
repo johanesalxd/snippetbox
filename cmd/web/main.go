@@ -35,10 +35,16 @@ func main() {
 	app := initApp()
 	defer app.snippets.DB.Close()
 
-	app.logger.Info("starting server",
-		slog.String("addr", app.config.addr))
+	srv := http.Server{
+		Addr:     app.config.addr,
+		Handler:  app.routes(),
+		ErrorLog: slog.NewLogLogger(app.logger.Handler(), slog.LevelError),
+	}
 
-	err := http.ListenAndServe(app.config.addr, app.routes())
+	app.logger.Info("starting server",
+		slog.String("addr", srv.Addr))
+
+	err := srv.ListenAndServe()
 	app.logger.Error(err.Error())
 	os.Exit(1)
 }
