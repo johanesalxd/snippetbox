@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"log/slog"
@@ -35,14 +36,7 @@ func main() {
 	app := initApp()
 	defer app.snippets.DB.Close()
 
-	srv := http.Server{
-		Addr:     app.config.addr,
-		Handler:  app.routes(),
-		ErrorLog: slog.NewLogLogger(app.logger.Handler(), slog.LevelError),
-	}
-
-	app.logger.Info("starting server",
-		slog.String("addr", srv.Addr))
+	srv := app.initServer()
 
 	err := srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	app.logger.Error(err.Error())
@@ -102,4 +96,22 @@ func openDB(dsn string) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func (app application) initServer() http.Server {
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
+	srv := http.Server{
+		Addr:      app.config.addr,
+		Handler:   app.routes(),
+		ErrorLog:  slog.NewLogLogger(app.logger.Handler(), slog.LevelError),
+		TLSConfig: tlsConfig,
+	}
+
+	app.logger.Info("starting server",
+		slog.String("addr", srv.Addr))
+
+	return srv
 }
